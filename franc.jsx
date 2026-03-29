@@ -89,7 +89,9 @@ function getKey(m, y) {
   return `${y}-${String(m + 1).padStart(2, '0')}`;
 }
 
-// ── GET STYLES CLOSURE FOR THEME ──────────────────────────
+const PIE_COLORS = ['#f87171', '#60a5fa', '#facc15', '#34d399', '#c084fc', '#fb923c', '#e879f9'];
+
+// ── STYLES CLOSURE ─────────────────────────────────────────
 const getStyles = (isDark) => {
   const bg = isDark ? '#080810' : '#f0f0f5';
   const cardBg = isDark ? '#10101a' : '#ffffff';
@@ -144,12 +146,7 @@ const getStyles = (isDark) => {
     txAmtOut: { fontFamily:'monospace', fontSize:13, fontWeight:500, color:'#f87171' },
     txAmtIn: { fontFamily:'monospace', fontSize:13, fontWeight:500, color:'#34d399' },
     txDel: { background:'none', border:'none', color:textSub, cursor:'pointer', fontSize:13, padding:4, touchAction:'manipulation' },
-    aiOut: { fontFamily:'monospace', fontSize:12, lineHeight:1.75, color:textSub, whiteSpace:'pre-wrap', minHeight:40 },
-    aiDot: { width:7, height:7, background:accent, borderRadius:'50%', boxShadow:`0 0 8px ${accent}`, display:'inline-block', marginRight:8 },
     bsTable: { width:'100%', borderCollapse:'collapse', marginBottom:12 },
-    exportBtn: { width:'100%', textAlign:'left', padding:'13px 14px', display:'flex', alignItems:'center', gap:12, fontSize:13, background:inputBg, border:`1px solid ${border}`, borderRadius:8, cursor:'pointer', marginBottom:8, color:textMain, fontFamily:'inherit', touchAction:'manipulation' },
-    exportBtnLabel: { fontWeight:700, fontSize:13 },
-    exportBtnSub: { fontFamily:'monospace', fontSize:10, color:textSub, marginTop:2 },
     srcRow: { display:'flex', alignItems:'center', justifyContent:'space-between', padding:'11px 0', borderBottom:`1px solid ${borderFaint}`, fontSize:13, fontWeight:600 },
     delBtn: { background:'none', border:'none', color:textSub, cursor:'pointer', fontSize:13, touchAction:'manipulation' },
     empty: { textAlign:'center', padding:'32px 16px', color:textSub, fontFamily:'monospace', fontSize:12, lineHeight:1.8 },
@@ -177,9 +174,11 @@ export default function App() {
   const [tab, setTab] = useState('overview');
   const [toast, setToast] = useState({ show:false, msg:'' });
 
+  // Core Data States
   const [categories, setCategories] = useState(DEFAULT_CATS);
   const [sources, setSources] = useState(DEFAULT_SOURCES);
   const [allocations, setAllocations] = useState(DEFAULT_ALLOCATIONS);
+  const [preferences, setPreferences] = useState({ showAlloc: true });
   const [ledger, setLedger] = useState({});
 
   // Form states
@@ -195,9 +194,6 @@ export default function App() {
   const [newCatEmoji, setNewCatEmoji] = useState('');
   const [newCatName, setNewCatName] = useState('');
 
-  const [aiText, setAiText] = useState('Hit analyze. Get your financial reality check.');
-  const [aiStatus, setAiStatus] = useState('Smart local + AI when online');
-  const [aiLoading, setAiLoading] = useState(false);
   const [draftAllocations, setDraftAllocations] = useState([]);
 
   // Account Form states
@@ -211,9 +207,9 @@ export default function App() {
   useEffect(() => {
     const style = document.createElement('style');
     style.innerHTML = `
-      body, html { margin: 0; padding: 0; overflow-x: hidden; touch-action: pan-y; -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
-      ::-webkit-scrollbar { width: 0px; background: transparent; display: none; }
-      * { -ms-overflow-style: none; scrollbar-width: none; }
+      body, html { margin: 0; padding: 0; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
+      ::-webkit-scrollbar { display: none; }
+      * { scrollbar-width: none; }
     `;
     document.head.appendChild(style);
     return () => document.head.removeChild(style);
@@ -264,6 +260,7 @@ export default function App() {
         setCategories(d.categories || DEFAULT_CATS);
         setSources(d.sources || DEFAULT_SOURCES);
         setAllocations(d.allocations || DEFAULT_ALLOCATIONS);
+        setPreferences(d.preferences || { showAlloc: true });
         setDraftAllocations(d.allocations || DEFAULT_ALLOCATIONS);
         setLedger(d.ledger || {});
         if (!incSrc && (d.sources || DEFAULT_SOURCES).length > 0) {
@@ -274,6 +271,7 @@ export default function App() {
           categories: DEFAULT_CATS,
           sources: DEFAULT_SOURCES,
           allocations: DEFAULT_ALLOCATIONS,
+          preferences: { showAlloc: true },
           ledger: {}
         });
         setIncSrc(DEFAULT_SOURCES[0]);
@@ -322,7 +320,6 @@ export default function App() {
     try {
       await updateProfile(currentUser, { displayName: profileName, photoURL: profilePic });
       showToast('✓ Profile Updated');
-      /* Force a component re-render so currentUser object visually updates */
       setCurrentUser(Object.assign({}, currentUser, { displayName: profileName, photoURL: profilePic }));
     } catch (e) {
       showToast('⚠ Error updating profile');
@@ -356,7 +353,6 @@ export default function App() {
     }
     setUploadingImage(false);
   };
-
 
   // ── RENDER COMPONENT GUARDS ────────────
   if (!isFirebaseConfigured) return null;
@@ -521,7 +517,7 @@ export default function App() {
       </div>
 
       <div style={S.tabs}>
-        {[['overview','OVERVIEW'],['log','LOG'],['sheet','BALANCE'],['account','PROFILE'],['settings','SET']].map(([id,label])=>(
+        {[['overview','OVERVIEW'],['log','LOG'],['sheet','BALANCE'],['settings','SETTINGS']].map(([id,label])=>(
           <button key={id} style={S.tab(tab===id)} onClick={()=>setTab(id)}>{label}</button>
         ))}
       </div>
@@ -566,7 +562,7 @@ export default function App() {
 
       {tab==='log' && (
         <div style={S.section}>
-          <div style={S.secTitle}>LOG INCOME (WILL AUTO-ALLOCATE)</div>
+          <div style={S.secTitle}>LOG INCOME</div>
           <div style={S.formBlock}>
             <label style={S.formLabel}>AMOUNT (XAF)</label>
             <input style={S.input} type="number" placeholder="e.g. 25000" value={incAmt} onChange={e=>setIncAmt(e.target.value)} />
@@ -601,7 +597,7 @@ export default function App() {
             <button style={S.btnFull} onClick={logExpense}>+ LOG EXPENSE</button>
           </div>
 
-          <div style={S.secTitle}>THIS MONTH'S TRANSACTIONS</div>
+          <div style={S.secTitle}>THIS MONTH'S TRANSACTIONS (JOURNAL)</div>
           {allTx.length === 0
             ? <div style={S.empty}>📋<br/>No transactions logged yet.</div>
             : allTx.map(tx => {
@@ -624,26 +620,55 @@ export default function App() {
 
       {tab==='sheet' && (
         <div style={S.section}>
-          <div style={S.card}>
-            <div style={S.cardLabel}>TARGET ALLOCATIONS THIS MONTH</div>
-            <div style={{fontFamily:'monospace',fontSize:10,color:S.app.color,marginBottom:12, lineHeight:1.5}}>
-              Based on your custom rules and Total Income of XAF {fmt(totalIn)}, here is how your money should be distributed:
+          
+          {preferences.showAlloc && (
+            <div style={S.card}>
+              <div style={S.cardLabel}>TARGET ALLOCATIONS THIS MONTH</div>
+              <div style={{fontFamily:'monospace',fontSize:10,color:S.app.color,marginBottom:12, lineHeight:1.5}}>
+                Based on your rules and Total Income of XAF {fmt(totalIn)}, your ideal distribution:
+              </div>
+              {allocations.map(al => {
+                 const targetAmt = (totalIn * al.pct) / 100;
+                 return (
+                   <div key={al.id} style={S.srcRow}>
+                     <span>{al.name} <span style={{color:S.app.color,fontSize:10}}>({al.pct}%)</span></span>
+                     <span style={{color:'#34d399',fontFamily:'monospace',fontWeight:700}}>XAF {fmt(targetAmt)}</span>
+                   </div>
+                 );
+              })}
             </div>
-            {allocations.map(al => {
-               const targetAmt = (totalIn * al.pct) / 100;
-               return (
-                 <div key={al.id} style={S.srcRow}>
-                   <span>{al.name} <span style={{color:S.app.color,fontSize:10}}>({al.pct}%)</span></span>
-                   <span style={{color:'#34d399',fontFamily:'monospace',fontWeight:700}}>XAF {fmt(targetAmt)}</span>
-                 </div>
-               );
-            })}
-          </div>
+          )}
 
           <div style={S.card}>
-            <div style={S.cardLabel}>BALANCE SHEET</div>
+            <div style={S.cardLabel}>BALANCE SHEET & VISUALS</div>
             
-            <div style={{...S.secTitle, marginTop:12}}>INCOME (MONEY IN)</div>
+            {/* CSS Pie Chart generated dynamically based on actual out-going percentages */}
+            {totalOut > 0 && (() => {
+              let currentAngle = 0;
+              const gradients = nonZeroCats.map((c, i) => {
+                const pct = (catTotals[c.id] / totalOut) * 100;
+                const start = currentAngle;
+                currentAngle += pct;
+                return `${PIE_COLORS[i % PIE_COLORS.length]} ${start}% ${currentAngle}%`;
+              });
+              
+              return (
+                <div style={{display:'flex', alignItems:'center', gap:20, marginTop:14, paddingBottom: 16, borderBottom:`1px solid ${isDark?'#ffffff0d':'#0000000d'}`}}>
+                  <div style={{ width: 100, height: 100, borderRadius: '50%', background: `conic-gradient(${gradients.join(', ')})`, filter: 'drop-shadow(0 0 10px rgba(0,0,0,0.1))' }} />
+                  <div style={{flex: 1}}>
+                    {nonZeroCats.slice(0, 4).map((c, i) => (
+                       <div key={c.id} style={{display:'flex', alignItems:'center', gap:8, marginBottom:6, fontSize:11, fontFamily:'monospace', color:isDark?'#eeeef5':'#111118', fontWeight:600}}>
+                          <div style={{width:10,height:10,borderRadius:'50%',background:PIE_COLORS[i%PIE_COLORS.length]}}/>
+                          <span style={{flex:1, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis'}}>{c.name}</span>
+                          <span>{((catTotals[c.id]/totalOut)*100).toFixed(0)}%</span>
+                       </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+            
+            <div style={{...S.secTitle, marginTop: totalOut > 0 ? 16 : 12}}>INCOME (MONEY IN)</div>
             <table style={S.bsTable}>
               <tbody>
                 {curLedger.income.length === 0
@@ -659,10 +684,14 @@ export default function App() {
                     ));
                   })()
                 }
+                <tr>
+                  <td style={{fontSize:12,fontWeight:700,padding:'12px 0 4px', color:isDark?'#ffffff':'#000000'}}>TOTAL</td>
+                  <td style={{fontFamily:'monospace',fontSize:13,fontWeight:700,color:'#34d399',textAlign:'right',padding:'12px 0 4px'}}>XAF {fmt(totalIn)}</td>
+                </tr>
               </tbody>
             </table>
 
-            <div style={{...S.secTitle, marginTop:16}}>EXPENSES (MONEY OUT)</div>
+            <div style={{...S.secTitle, marginTop:24}}>EXPENSES (MONEY OUT)</div>
             <table style={S.bsTable}>
               <tbody>
                 {nonZeroCats.length === 0
@@ -676,22 +705,33 @@ export default function App() {
                     );
                   })
                 }
+                <tr>
+                  <td style={{fontSize:12,fontWeight:700,padding:'12px 0 4px', color:isDark?'#ffffff':'#000000'}}>TOTAL</td>
+                  <td style={{fontFamily:'monospace',fontSize:13,fontWeight:700,color:'#f87171',textAlign:'right',padding:'12px 0 4px'}}>XAF {fmt(totalOut)}</td>
+                </tr>
               </tbody>
             </table>
           </div>
         </div>
       )}
 
-      {tab==='account' && (
+      {tab==='settings' && (
         <div style={S.section}>
-          <div style={S.card}>
+          {/* PROFILE SECTION CONSOLIDATED INTO SETTINGS */}
+          <div style={S.secTitle}>ACCOUNT PROFILE</div>
+          <div style={S.formBlock}>
             <div style={{display:'flex', alignItems:'center', gap:15, marginBottom:20}}>
-               <div style={{width:60, height:60, borderRadius:'50%', background: isDark?'#ffffff1a':'#0000001a', display:'flex', alignItems:'center', justifyContent:'center', fontSize:24, overflow:'hidden'}}>
-                 {currentUser.photoURL ? <img src={currentUser.photoURL} width="100%" height="100%" style={{objectFit:'cover'}} alt="profile"/> : '👤'}
-               </div>
-               <div>
-                 <div style={{fontSize:16, fontWeight:700}}>{currentUser.displayName || 'Anonymous User'}</div>
-                 <div style={{fontSize:12, color:S.app.color, opacity:0.7, fontFamily:'monospace', marginTop:2}}>{currentUser.email}</div>
+               <label style={{position:'relative', width:60, height:60, cursor:'pointer', display:'block', flexShrink:0}}>
+                 <div style={{width:'100%', height:'100%', borderRadius:'50%', background: isDark?'#ffffff1a':'#0000001a', display:'flex', alignItems:'center', justifyContent:'center', fontSize:24, overflow:'hidden'}}>
+                   {currentUser.photoURL ? <img src={currentUser.photoURL} width="100%" height="100%" style={{objectFit:'cover'}} alt="profile"/> : '👤'}
+                   {uploadingImage && <div style={{position:'absolute', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14}}>⏳</div>}
+                 </div>
+                 <div style={{position:'absolute', bottom:0, right:-4, width:20, height:20, borderRadius:'50%', background:S.app.color, color:S.app.background, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:'700', border:`2px solid ${isDark?'#10101a':'#ffffff'}`}}>+</div>
+                 <input type="file" accept="image/*" style={{display:'none'}} onChange={handleImageUpload} />
+               </label>
+               <div style={{overflow:'hidden'}}>
+                 <div style={{fontSize:16, fontWeight:700, whiteSpace:'nowrap', textOverflow:'ellipsis', overflow:'hidden'}}>{currentUser.displayName || 'Anonymous User'}</div>
+                 <div style={{fontSize:12, color:S.app.color, opacity:0.7, fontFamily:'monospace', marginTop:2, whiteSpace:'nowrap', textOverflow:'ellipsis', overflow:'hidden'}}>{currentUser.email}</div>
                  {currentUser.emailVerified ? 
                    <span style={{fontSize:10, color:'#34d399', fontWeight:600, fontFamily:'monospace'}}>✓ VERIFIED ACCOUNT</span> :
                    <button onClick={handleSendVerification} style={{background:'none',border:'none',color:'#f87171',fontSize:10,fontFamily:'monospace',padding:0,cursor:'pointer',textDecoration:'underline',marginTop:2}}>Send Verification Email</button>
@@ -699,47 +739,47 @@ export default function App() {
                </div>
             </div>
 
-            <div style={S.secTitle}>EDIT PROFILE</div>
             <label style={S.formLabel}>DISPLAY NAME</label>
-            <input style={S.input} placeholder="e.g. John Doe" value={profileName} onChange={e=>setProfileName(e.target.value)} />
+            <input style={{...S.input, marginBottom:16}} placeholder="e.g. John Doe" value={profileName} onChange={e=>setProfileName(e.target.value)} />
             
-            <label style={S.formLabel}>PROFILE PICTURE (URL OR UPLOAD)</label>
-            <div style={{display:'flex', gap:8, marginBottom:16}}>
-              <input style={{...S.input, flex:1, marginBottom:0}} placeholder="https://..." value={profilePic} onChange={e=>setProfilePic(e.target.value)} />
-              <label style={{...S.btnGhost, display:'flex', alignItems:'center', cursor:'pointer', height:40, boxSizing:'border-box'}}>
-                {uploadingImage ? '⏳' : '📷 UPLOAD'}
-                <input type="file" accept="image/*" style={{display:'none'}} onChange={handleImageUpload} />
-              </label>
-            </div>
-
             <button style={S.btnFull} onClick={handleUpdateProfile}>SAVE PROFILE</button>
           </div>
-          
-          <button style={{...S.btnGhost, borderColor:'#f8717140', color:'#f87171', width:'100%', marginTop:10, padding:14}} onClick={() => signOut(auth)}>
-            LOG OUT OF FRANC
-          </button>
-        </div>
-      )}
 
-      {tab==='settings' && (
-        <div style={S.section}>
-          <div style={S.secTitle}>YOUR CUSTOM ALLOCATIONS (TOTAL: 100%)</div>
+          <div style={S.secTitle}>GLOBAL PREFERENCES</div>
           <div style={S.formBlock}>
-             <div style={{fontFamily:'monospace',fontSize:10,color:S.app.color,marginBottom:12, lineHeight:1.5}}>
-                Define how 100% of your incoming cash is distributed.
-             </div>
-             {draftAllocations.map(al => (
-               <div key={al.id} style={{display:'flex', gap:8, marginBottom:10}}>
-                  <input style={{...S.input, marginBottom:0, width:60}} type="number" placeholder="%" value={al.pct} onChange={e=>updateDraftAlloc(al.id, 'pct', Number(e.target.value))} />
-                  <input style={{...S.input, marginBottom:0, flex:1}} placeholder="Name (e.g. Business)" value={al.name} onChange={e=>updateDraftAlloc(al.id, 'name', e.target.value)} />
-                  <button style={S.delBtn} onClick={() => removeDraftAlloc(al.id)}>✕</button>
-               </div>
-             ))}
-             <div style={{display:'flex', gap:10, marginTop:15}}>
-                <button style={{...S.btnGhost, flex:1}} onClick={addDraftAlloc}>+ SPLIT</button>
-                <button style={{...S.btnAccent, flex:1}} onClick={saveAllocations}>SAVE RULES</button>
+             <div style={{...S.srcRow, borderBottom:'none', padding:0}}>
+               <span style={{fontSize:12, fontWeight:700}}>Show 'Target Allocations' in Balance</span>
+               <button 
+                 onClick={() => {
+                    const next = !preferences.showAlloc;
+                    setPreferences({...preferences, showAlloc: next});
+                    updateCloudData({ preferences: { showAlloc: next } });
+                 }} 
+                 style={{...S.btnAccent, height:'auto', padding:'6px 12px', background: preferences.showAlloc ? S.app.color : 'transparent', color: preferences.showAlloc ? S.app.background : S.app.color, border: `1px solid ${S.app.color}`}}
+               >
+                 {preferences.showAlloc ? 'ON' : 'OFF'}
+               </button>
              </div>
           </div>
+
+          {preferences.showAlloc && (
+            <>
+              <div style={S.secTitle}>YOUR CUSTOM ALLOCATIONS (TOTAL: 100%)</div>
+              <div style={S.formBlock}>
+                 {draftAllocations.map(al => (
+                   <div key={al.id} style={{display:'flex', gap:8, marginBottom:10}}>
+                      <input style={{...S.input, marginBottom:0, width:60}} type="number" placeholder="%" value={al.pct} onChange={e=>updateDraftAlloc(al.id, 'pct', Number(e.target.value))} />
+                      <input style={{...S.input, marginBottom:0, flex:1}} placeholder="Name (e.g. Business)" value={al.name} onChange={e=>updateDraftAlloc(al.id, 'name', e.target.value)} />
+                      <button style={S.delBtn} onClick={() => removeDraftAlloc(al.id)}>✕</button>
+                   </div>
+                 ))}
+                 <div style={{display:'flex', gap:10, marginTop:15}}>
+                    <button style={{...S.btnGhost, flex:1}} onClick={addDraftAlloc}>+ SPLIT</button>
+                    <button style={{...S.btnAccent, flex:1}} onClick={saveAllocations}>SAVE RULES</button>
+                 </div>
+              </div>
+            </>
+          )}
 
           <div style={S.secTitle}>EXPENSE CATEGORIES</div>
           {categories.map(c=>(
@@ -748,11 +788,15 @@ export default function App() {
               <button style={S.delBtn} onClick={()=>{ if(categories.length>1){ const nc=categories.filter(x=>x.id!==c.id); setCategories(nc); updateCloudData({categories:nc}); } }}>✕</button>
             </div>
           ))}
-          <div style={{...S.row, marginTop:10}}>
+          <div style={{...S.row, marginTop:10, marginBottom:16}}>
             <input style={{...S.input, width:48, flex:'none', textAlign:'center', marginBottom:0}} placeholder="🏷" maxLength={2} value={newCatEmoji} onChange={e=>setNewCatEmoji(e.target.value)} />
             <input style={{...S.input, flex:1, marginBottom:0}} placeholder="Category name…" value={newCatName} onChange={e=>setNewCatName(e.target.value)} />
             <button style={{...S.btnAccent, height: 'auto'}} onClick={addCategory}>ADD</button>
           </div>
+
+          <button style={{...S.btnGhost, borderColor:'#f8717140', color:'#f87171', width:'100%', marginTop:10, padding:14}} onClick={() => signOut(auth)}>
+            LOG OUT ({currentUser.email})
+          </button>
         </div>
       )}
 
