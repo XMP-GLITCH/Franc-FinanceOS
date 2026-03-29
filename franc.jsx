@@ -15,20 +15,19 @@ const firebaseConfig = {
   measurementId: "G-4R8B5HZJNQ"
 };
 
-const isFirebaseConfigured = firebaseConfig.apiKey !== "REPLACE_ME" && firebaseConfig.apiKey !== "";
-
 let app, auth, db, storage;
-if (isFirebaseConfigured) {
+let isFirebaseConfigured = false;
+let isFirestoreOfflineEnabled = false;
+
+if (firebaseConfig.apiKey && firebaseConfig.apiKey !== 'YOUR_API_KEY') {
+  isFirebaseConfigured = true;
   try {
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
     db = getFirestore(app);
     storage = getStorage(app);
-    try {
-      enableIndexedDbPersistence(db).catch(console.warn);
-    } catch(e) {}
   } catch (err) {
-    console.error("Firebase init error", err);
+    console.error('Firebase initialization error', err);
   }
 }
 
@@ -311,6 +310,12 @@ export default function App() {
       return;
     }
     const unsub = onAuthStateChanged(auth, (user) => {
+      if (!isFirestoreOfflineEnabled && db) {
+        try {
+          enableIndexedDbPersistence(db).catch(console.warn);
+        } catch(e) {}
+        isFirestoreOfflineEnabled = true;
+      }
       setCurrentUser(user);
       setAuthLoading(false);
     });
