@@ -372,24 +372,17 @@ export default function App() {
     const unsub = onSnapshot(userRef, (snapshot) => {
       if (snapshot.exists()) {
         const d = snapshot.data();
-        setCategories(d.categories || DEFAULT_CATS);
-        setSources(d.sources || DEFAULT_SOURCES);
-        setAllocations(d.allocations || DEFAULT_ALLOCATIONS);
-        setPreferences(d.preferences || { showAlloc: true });
-        setDraftAllocations(d.allocations || DEFAULT_ALLOCATIONS);
-        setLedger(d.ledger || {});
-        if (!incSrc && (d.sources || DEFAULT_SOURCES).length > 0) {
-           setIncSrc((d.sources || DEFAULT_SOURCES)[0]);
+        if (d.categories) setCategories(d.categories);
+        if (d.sources) setSources(d.sources);
+        if (d.allocations) {
+           setAllocations(d.allocations);
+           setDraftAllocations(d.allocations);
         }
-      } else {
-        setDoc(userRef, {
-          categories: DEFAULT_CATS,
-          sources: DEFAULT_SOURCES,
-          allocations: DEFAULT_ALLOCATIONS,
-          preferences: { showAlloc: true },
-          ledger: {}
-        });
-        setIncSrc(DEFAULT_SOURCES[0]);
+        if (d.preferences) setPreferences(d.preferences);
+        if (d.ledger) setLedger(d.ledger);
+        if (!incSrc && d.sources && d.sources.length > 0) {
+           setIncSrc(d.sources[0]);
+        }
       }
     });
     return () => unsub();
