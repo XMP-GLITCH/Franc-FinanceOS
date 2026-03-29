@@ -93,26 +93,29 @@ const PIE_COLORS = ['#f87171', '#60a5fa', '#facc15', '#34d399', '#c084fc', '#fb9
 
 // ── LOADING ANIMATION COMPONENT ─────────────────────────
 const CustomLoader = ({ fullScreen, mini }) => {
+  const SvgIcon = () => (
+    <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="120" height="120" rx="26" fill="#c8f542"/>
+      <circle cx="60" cy="60" r="42" fill="#080810"/>
+      <rect className="p0" x="45" y="37" width="6" height="6" rx="1" fill="#c8f542"/>
+      <rect className="p1" x="53" y="37" width="6" height="6" rx="1" fill="#c8f542"/>
+      <rect className="p2" x="61" y="37" width="6" height="6" rx="1" fill="#c8f542"/>
+      <rect className="p3" x="69" y="37" width="6" height="6" rx="1" fill="#c8f542"/>
+      <rect className="p4" x="45" y="45" width="6" height="6" rx="1" fill="#c8f542"/>
+      <rect className="p5" x="45" y="53" width="6" height="6" rx="1" fill="#c8f542"/>
+      <rect className="p6" x="53" y="53" width="6" height="6" rx="1" fill="#c8f542"/>
+      <rect className="p7" x="61" y="53" width="6" height="6" rx="1" fill="#c8f542"/>
+      <rect className="p8" x="45" y="61" width="6" height="6" rx="1" fill="#c8f542"/>
+      <rect className="p8" x="45" y="69" width="6" height="6" rx="1" fill="#c8f542"/>
+      <rect className="p9" x="45" y="77" width="6" height="6" rx="1" fill="#c8f542"/>
+    </svg>
+  );
+
   if (mini) {
     return (
       <div style={{transform: 'scale(0.25)', transformOrigin: 'center center', width: 120, height: 120}}>
         <div className="icon-wrap" style={{marginBottom: 0}}>
-          <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-            <rect x="0" y="0" width="120" height="120" rx="26" fill="#c8f542"/>
-            <circle cx="60" cy="60" r="42" fill="#080810"/>
-            <rect className="p0" x="45" y="37" width="6" height="6" rx="1" fill="#c8f542"/>
-            <rect className="p1" x="53" y="37" width="6" height="6" rx="1" fill="#c8f542"/>
-            <rect className="p2" x="61" y="37" width="6" height="6" rx="1" fill="#c8f542"/>
-            <rect className="p3" x="69" y="37" width="6" height="6" rx="1" fill="#c8f542"/>
-            <rect className="p4" x="45" y="45" width="6" height="6" rx="1" fill="#c8f542"/>
-            <rect className="p5" x="45" y="53" width="6" height="6" rx="1" fill="#c8f542"/>
-            <rect className="p6" x="53" y="53" width="6" height="6" rx="1" fill="#c8f542"/>
-            <rect className="p7" x="61" y="53" width="6" height="6" rx="1" fill="#c8f542"/>
-            <rect className="p8" x="45" y="61" width="6" height="6" rx="1" fill="#c8f542"/>
-            <rect className="p8" x="45" y="69" width="6" height="6" rx="1" fill="#c8f542"/>
-            <rect className="p9" x="45" y="77" width="6" height="6" rx="1" fill="#c8f542"/>
-          </svg>
-          <div className="scan"></div>
+          <SvgIcon />
         </div>
       </div>
     );
@@ -121,29 +124,8 @@ const CustomLoader = ({ fullScreen, mini }) => {
   return (
     <div className="loader-wrap" style={fullScreen ? { height: '100vh', width: '100vw', background: '#080810' } : {}}>
       <div className="icon-wrap">
-        <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-          <rect x="0" y="0" width="120" height="120" rx="26" fill="#c8f542"/>
-          <circle cx="60" cy="60" r="42" fill="#080810"/>
-          <rect className="p0" x="45" y="37" width="6" height="6" rx="1" fill="#c8f542"/>
-          <rect className="p1" x="53" y="37" width="6" height="6" rx="1" fill="#c8f542"/>
-          <rect className="p2" x="61" y="37" width="6" height="6" rx="1" fill="#c8f542"/>
-          <rect className="p3" x="69" y="37" width="6" height="6" rx="1" fill="#c8f542"/>
-          <rect className="p4" x="45" y="45" width="6" height="6" rx="1" fill="#c8f542"/>
-          <rect className="p5" x="45" y="53" width="6" height="6" rx="1" fill="#c8f542"/>
-          <rect className="p6" x="53" y="53" width="6" height="6" rx="1" fill="#c8f542"/>
-          <rect className="p7" x="61" y="53" width="6" height="6" rx="1" fill="#c8f542"/>
-          <rect className="p8" x="45" y="61" width="6" height="6" rx="1" fill="#c8f542"/>
-          <rect className="p8" x="45" y="69" width="6" height="6" rx="1" fill="#c8f542"/>
-          <rect className="p9" x="45" y="77" width="6" height="6" rx="1" fill="#c8f542"/>
-        </svg>
-        <div className="scan"></div>
+        <SvgIcon />
       </div>
-      <div className="wordmark">FRANC</div>
-      <div className="sub">PERSONAL FINANCE OS</div>
-      <div className="loading-bar-wrap">
-        <div className="loading-bar"></div>
-      </div>
-      <div className="loading-text">loading</div>
     </div>
   );
 };
@@ -274,57 +256,27 @@ export default function App() {
         50% { transform: scale(1.04); }
       }
       @keyframes blink-pixel {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0; }
+        0%, 49% { opacity: 1; }
+        50%, 100% { opacity: 0; }
       }
-      @keyframes scan-line {
-        0% { transform: translateY(-80px); opacity: 0.6; }
-        100% { transform: translateY(80px); opacity: 0; }
-      }
-      @keyframes fade-in-word {
-        0% { opacity: 0; letter-spacing: 16px; }
-        100% { opacity: 1; letter-spacing: 10px; }
-      }
-      @keyframes dots {
-        0%   { content: ''; }
-        33%  { content: '.'; }
-        66%  { content: '..'; }
-        100% { content: '...'; }
-      }
+
       .loader-wrap {
         display: flex; flex-direction: column; align-items: center; justify-content: center;
-        padding: 60px 20px; min-height: 320px; border-radius: 16px;
+        padding: 60px 20px; min-height: 280px; border-radius: 16px;
       }
-      .icon-wrap { position: relative; width: 120px; height: 120px; margin-bottom: 32px; animation: pulse-coin 4.8s ease-in-out infinite; }
+      .icon-wrap { width: 120px; height: 120px; animation: pulse-coin 2.4s ease-in-out infinite; }
       .icon-wrap svg { width: 100%; height: 100%; overflow: hidden; border-radius: 26px; }
-      .scan {
-        position: absolute; top: 0; left: 0; right: 0; height: 18px;
-        background: linear-gradient(to bottom, transparent, #c8f54222, transparent);
-        border-radius: 26px; animation: scan-line 3.6s ease-in-out infinite; pointer-events: none;
-      }
-      .p0 { animation: blink-pixel 3.3s step-start infinite 0.0s; }
-      .p1 { animation: blink-pixel 3.3s step-start infinite 0.45s; }
-      .p2 { animation: blink-pixel 3.3s step-start infinite 0.9s; }
-      .p3 { animation: blink-pixel 3.3s step-start infinite 1.35s; }
-      .p4 { animation: blink-pixel 3.3s step-start infinite 1.8s; }
-      .p5 { animation: blink-pixel 3.3s step-start infinite 2.25s; }
-      .p6 { animation: blink-pixel 3.3s step-start infinite 2.7s; }
-      .p7 { animation: blink-pixel 3.3s step-start infinite 3.15s; }
-      .p8 { animation: blink-pixel 3.3s step-start infinite 3.6s; }
-      .p9 { animation: blink-pixel 3.3s step-start infinite 4.05s; }
-      .wordmark {
-        font-family: ui-monospace, monospace; font-size: 22px; font-weight: 700; color: #c8f542;
-        letter-spacing: 10px; animation: fade-in-word 2.5s ease-out both; margin-bottom: 10px;
-      }
-      .sub { font-family: ui-monospace, monospace; font-size: 11px; color: #5a5a7a; letter-spacing: 3px; margin-bottom: 28px; }
-      .loading-bar-wrap { width: 120px; height: 2px; background: #1a1a2e; border-radius: 2px; overflow: hidden; margin-bottom: 10px; }
-      @keyframes bar-fill {
-        0%   { width: 0%; } 20%  { width: 30%; } 50%  { width: 58%; }
-        80%  { width: 82%; } 95%  { width: 95%; } 100% { width: 100%; }
-      }
-      .loading-bar { height: 100%; background: #c8f542; border-radius: 2px; animation: bar-fill 5.6s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
-      .loading-text { font-family: ui-monospace, monospace; font-size: 11px; color: #444466; letter-spacing: 1.5px; }
-      .loading-text::after { content: ''; animation: dots 2.4s steps(1) infinite; }
+
+      .p0 { animation: blink-pixel 1.2s step-start infinite 0.00s; }
+      .p1 { animation: blink-pixel 1.2s step-start infinite 0.12s; }
+      .p2 { animation: blink-pixel 1.2s step-start infinite 0.24s; }
+      .p3 { animation: blink-pixel 1.2s step-start infinite 0.36s; }
+      .p4 { animation: blink-pixel 1.2s step-start infinite 0.48s; }
+      .p5 { animation: blink-pixel 1.2s step-start infinite 0.60s; }
+      .p6 { animation: blink-pixel 1.2s step-start infinite 0.72s; }
+      .p7 { animation: blink-pixel 1.2s step-start infinite 0.84s; }
+      .p8 { animation: blink-pixel 1.2s step-start infinite 0.96s; }
+      .p9 { animation: blink-pixel 1.2s step-start infinite 1.08s; }
     `;
     document.head.appendChild(style);
     return () => document.head.removeChild(style);
