@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { initializeApp } from 'firebase/app';
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updateProfile, sendEmailVerification } from 'firebase/auth';
-import { getFirestore, enableIndexedDbPersistence, doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { getFirestore, enableIndexedDbPersistence, doc, onSnapshot, setDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // ── FIREBASE CONFIG ─────────────────────────────────────
@@ -516,11 +516,14 @@ export default function App() {
     const a = Number(incAmt);
     if (!a || a <= 0) return showToast('⚠ Enter valid amount');
     if (!incSrc) return showToast('⚠ Select source');
+    const tx = { id: Date.now(), amt: a, src: incSrc, note: incNote, date: now.toISOString().split('T')[0] };
     const nl = { ...ledger };
     if (!nl[key]) nl[key] = { income:[], expenses:[] };
-    nl[key].income.push({ id: Date.now(), amt: a, src: incSrc, note: incNote, date: now.toISOString().split('T')[0] });
+    nl[key].income.push(tx);
     setLedger(nl);
-    updateCloudData({ ledger: nl });
+    if (currentUser) {
+      setDoc(doc(db, 'users', currentUser.uid), { [`ledger.${key}.income`]: arrayUnion(tx) }, { merge: true }).catch(()=>showToast('⚠ Sync Error'));
+    }
     setIncAmt(''); setIncNote('');
     showToast('✓ Income logged');
   };
@@ -529,22 +532,29 @@ export default function App() {
     const a = Number(expAmt);
     if (!a || a <= 0) return showToast('⚠ Enter valid amount');
     if (!expCat) return showToast('⚠ Select category');
+    const tx = { id: Date.now(), amt: a, desc: expDesc, cat: expCat, date: now.toISOString().split('T')[0] };
     const nl = { ...ledger };
     if (!nl[key]) nl[key] = { income:[], expenses:[] };
-    nl[key].expenses.push({ id: Date.now(), amt: a, desc: expDesc, cat: expCat, date: now.toISOString().split('T')[0] });
+    nl[key].expenses.push(tx);
     setLedger(nl);
-    updateCloudData({ ledger: nl });
+    if (currentUser) {
+      setDoc(doc(db, 'users', currentUser.uid), { [`ledger.${key}.expenses`]: arrayUnion(tx) }, { merge: true }).catch(()=>showToast('⚠ Sync Error'));
+    }
     setExpAmt(''); setExpDesc(''); setExpCat('');
     showToast('✓ Expense logged');
   };
 
   const deleteTx = (type, id) => {
     if(!confirm('Delete transaction?')) return;
+    const catType = type === 'inc' ? 'income' : 'expenses';
+    const tx = ledger[key]?.[catType]?.find(x => x.id === id);
+    if (!tx) return;
     const nl = { ...ledger };
-    if (!nl[key]) return;
-    nl[key][type === 'inc' ? 'income' : 'expenses'] = nl[key][type === 'inc' ? 'income' : 'expenses'].filter(x => x.id !== id);
+    nl[key][catType] = nl[key][catType].filter(x => x.id !== id);
     setLedger(nl);
-    updateCloudData({ ledger: nl });
+    if (currentUser) {
+      setDoc(doc(db, 'users', currentUser.uid), { [`ledger.${key}.${catType}`]: arrayRemove(tx) }, { merge: true }).catch(()=>showToast('⚠ Sync Error'));
+    }
     showToast('✓ Transaction deleted');
   };
 
