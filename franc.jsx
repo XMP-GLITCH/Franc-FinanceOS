@@ -91,6 +91,64 @@ function getKey(m, y) {
 
 const PIE_COLORS = ['#f87171', '#60a5fa', '#facc15', '#34d399', '#c084fc', '#fb923c', '#e879f9'];
 
+// ── LOADING ANIMATION COMPONENT ─────────────────────────
+const CustomLoader = ({ fullScreen, mini }) => {
+  if (mini) {
+    return (
+      <div style={{transform: 'scale(0.25)', transformOrigin: 'center center', width: 120, height: 120}}>
+        <div className="icon-wrap" style={{marginBottom: 0}}>
+          <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+            <rect x="0" y="0" width="120" height="120" rx="26" fill="#c8f542"/>
+            <circle cx="60" cy="60" r="42" fill="#080810"/>
+            <rect className="p0" x="45" y="37" width="6" height="6" rx="1" fill="#c8f542"/>
+            <rect className="p1" x="53" y="37" width="6" height="6" rx="1" fill="#c8f542"/>
+            <rect className="p2" x="61" y="37" width="6" height="6" rx="1" fill="#c8f542"/>
+            <rect className="p3" x="69" y="37" width="6" height="6" rx="1" fill="#c8f542"/>
+            <rect className="p4" x="45" y="45" width="6" height="6" rx="1" fill="#c8f542"/>
+            <rect className="p5" x="45" y="53" width="6" height="6" rx="1" fill="#c8f542"/>
+            <rect className="p6" x="53" y="53" width="6" height="6" rx="1" fill="#c8f542"/>
+            <rect className="p7" x="61" y="53" width="6" height="6" rx="1" fill="#c8f542"/>
+            <rect className="p8" x="45" y="61" width="6" height="6" rx="1" fill="#c8f542"/>
+            <rect className="p8" x="45" y="69" width="6" height="6" rx="1" fill="#c8f542"/>
+            <rect className="p9" x="45" y="77" width="6" height="6" rx="1" fill="#c8f542"/>
+          </svg>
+          <div className="scan"></div>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="loader-wrap" style={fullScreen ? { height: '100vh', width: '100vw', background: '#080810' } : {}}>
+      <div className="icon-wrap">
+        <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="0" width="120" height="120" rx="26" fill="#c8f542"/>
+          <circle cx="60" cy="60" r="42" fill="#080810"/>
+          <rect className="p0" x="45" y="37" width="6" height="6" rx="1" fill="#c8f542"/>
+          <rect className="p1" x="53" y="37" width="6" height="6" rx="1" fill="#c8f542"/>
+          <rect className="p2" x="61" y="37" width="6" height="6" rx="1" fill="#c8f542"/>
+          <rect className="p3" x="69" y="37" width="6" height="6" rx="1" fill="#c8f542"/>
+          <rect className="p4" x="45" y="45" width="6" height="6" rx="1" fill="#c8f542"/>
+          <rect className="p5" x="45" y="53" width="6" height="6" rx="1" fill="#c8f542"/>
+          <rect className="p6" x="53" y="53" width="6" height="6" rx="1" fill="#c8f542"/>
+          <rect className="p7" x="61" y="53" width="6" height="6" rx="1" fill="#c8f542"/>
+          <rect className="p8" x="45" y="61" width="6" height="6" rx="1" fill="#c8f542"/>
+          <rect className="p8" x="45" y="69" width="6" height="6" rx="1" fill="#c8f542"/>
+          <rect className="p9" x="45" y="77" width="6" height="6" rx="1" fill="#c8f542"/>
+        </svg>
+        <div className="scan"></div>
+      </div>
+      <div className="wordmark">FRANC</div>
+      <div className="sub">PERSONAL FINANCE OS</div>
+      <div className="loading-bar-wrap">
+        <div className="loading-bar"></div>
+      </div>
+      <div className="loading-text">loading</div>
+    </div>
+  );
+};
+
+
 // ── STYLES CLOSURE ─────────────────────────────────────────
 const getStyles = (isDark) => {
   const bg = isDark ? '#080810' : '#f0f0f5';
@@ -203,17 +261,74 @@ export default function App() {
 
   const S = getStyles(isDark);
 
-  // ── INJECT GLOBAL 'NATIVE APP' STYLES ──────
+  // ── INJECT GLOBAL 'NATIVE APP' STYLES & LOAD ANIMATION ──────
   useEffect(() => {
     const style = document.createElement('style');
     style.innerHTML = `
       body, html { margin: 0; padding: 0; background: ${S.app.background}; -webkit-tap-highlight-color: transparent; }
       ::-webkit-scrollbar { display: none; }
       * { scrollbar-width: none; }
+
+      @keyframes pulse-coin {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.04); }
+      }
+      @keyframes blink-pixel {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+      }
+      @keyframes scan-line {
+        0% { transform: translateY(-80px); opacity: 0.6; }
+        100% { transform: translateY(80px); opacity: 0; }
+      }
+      @keyframes fade-in-word {
+        0% { opacity: 0; letter-spacing: 16px; }
+        100% { opacity: 1; letter-spacing: 10px; }
+      }
+      @keyframes dots {
+        0%   { content: ''; }
+        33%  { content: '.'; }
+        66%  { content: '..'; }
+        100% { content: '...'; }
+      }
+      .loader-wrap {
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        padding: 60px 20px; min-height: 320px; border-radius: 16px;
+      }
+      .icon-wrap { position: relative; width: 120px; height: 120px; margin-bottom: 32px; animation: pulse-coin 2.4s ease-in-out infinite; }
+      .icon-wrap svg { width: 100%; height: 100%; overflow: hidden; border-radius: 26px; }
+      .scan {
+        position: absolute; top: 0; left: 0; right: 0; height: 18px;
+        background: linear-gradient(to bottom, transparent, #c8f54222, transparent);
+        border-radius: 26px; animation: scan-line 1.8s ease-in-out infinite; pointer-events: none;
+      }
+      .p0 { animation: blink-pixel 1.1s step-start infinite 0.0s; }
+      .p1 { animation: blink-pixel 1.1s step-start infinite 0.15s; }
+      .p2 { animation: blink-pixel 1.1s step-start infinite 0.3s; }
+      .p3 { animation: blink-pixel 1.1s step-start infinite 0.45s; }
+      .p4 { animation: blink-pixel 1.1s step-start infinite 0.6s; }
+      .p5 { animation: blink-pixel 1.1s step-start infinite 0.75s; }
+      .p6 { animation: blink-pixel 1.1s step-start infinite 0.9s; }
+      .p7 { animation: blink-pixel 1.1s step-start infinite 1.05s; }
+      .p8 { animation: blink-pixel 1.1s step-start infinite 1.2s; }
+      .p9 { animation: blink-pixel 1.1s step-start infinite 1.35s; }
+      .wordmark {
+        font-family: ui-monospace, monospace; font-size: 22px; font-weight: 700; color: #c8f542;
+        letter-spacing: 10px; animation: fade-in-word 0.9s ease-out both; margin-bottom: 10px;
+      }
+      .sub { font-family: ui-monospace, monospace; font-size: 11px; color: #5a5a7a; letter-spacing: 3px; margin-bottom: 28px; }
+      .loading-bar-wrap { width: 120px; height: 2px; background: #1a1a2e; border-radius: 2px; overflow: hidden; margin-bottom: 10px; }
+      @keyframes bar-fill {
+        0%   { width: 0%; } 20%  { width: 30%; } 50%  { width: 58%; }
+        80%  { width: 82%; } 95%  { width: 95%; } 100% { width: 100%; }
+      }
+      .loading-bar { height: 100%; background: #c8f542; border-radius: 2px; animation: bar-fill 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+      .loading-text { font-family: ui-monospace, monospace; font-size: 11px; color: #444466; letter-spacing: 1.5px; }
+      .loading-text::after { content: ''; animation: dots 1.2s steps(1) infinite; }
     `;
     document.head.appendChild(style);
     return () => document.head.removeChild(style);
-  }, []);
+  }, [S.app.background]);
 
   // Sync profile fields when user loads
   useEffect(() => {
@@ -354,140 +469,6 @@ export default function App() {
     setUploadingImage(false);
   };
 
-  // ── RENDER COMPONENT GUARDS ────────────
-  if (!isFirebaseConfigured) return null;
-
-  if (authLoading) {
-    return (
-      <div style={{...S.app, justifyContent:'center', alignItems:'center'}}>
-        <div style={S.logo}>FRANC...</div>
-      </div>
-    );
-  }
-
-  if (!currentUser) {
-    return (
-      <div style={{...S.app, justifyContent:'center', padding: 20}}>
-        <div style={{textAlign:'center', marginBottom:40}}>
-          <div style={S.logo}>FRANC <span style={S.logoSub}>/ os auth</span></div>
-        </div>
-        <div style={S.card}>
-          <div style={S.secTitle}>{isSignUp ? 'CREATE ACCOUNT' : 'LOGIN TO FRANC'}</div>
-          <input style={S.input} type="email" placeholder="Email" value={loginEmail} onChange={e=>setLoginEmail(e.target.value)} />
-          <input style={S.input} type="password" placeholder="Password" value={loginPass} onChange={e=>setLoginPass(e.target.value)} />
-          {authError && <div style={{color:'#f87171', fontSize:12, marginBottom:15, fontFamily:'monospace'}}>{authError}</div>}
-          <button style={S.btnFull} onClick={handleAuthSubmit}>{isSignUp ? 'CREATE ACCOUNT' : 'LOGIN'}</button>
-          <button style={{...S.btnGhost, width:'100%', marginTop:10}} onClick={() => setIsSignUp(!isSignUp)}>
-             {isSignUp ? 'Already have an account? Login' : 'Need an account? Sign up'}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // ── DATA HELPERS ───────────────
-  const changeMonth = (dir) => {
-    let m = curM + dir, y = curY;
-    if (m > 11) { m = 0; y++; }
-    if (m < 0)  { m = 11; y--; }
-    setCurM(m); setCurY(y);
-  };
-
-  const key = getKey(curM, curY);
-  const curLedger = ledger[key] || { income:[], expenses:[] };
-  const prevMY = () => { let m = curM-1, y = curY; if(m<0){m=11;y--;} return {m,y}; };
-  const {m:pm, y:py} = prevMY();
-  const prevKey = getKey(pm, py);
-  const prevLedger = ledger[prevKey] || { income:[], expenses:[] };
-
-  const totalIn  = curLedger.income.reduce((s,e) => s+e.amt, 0);
-  const totalOut = curLedger.expenses.reduce((s,e) => s+e.amt, 0);
-  const net = totalIn - totalOut;
-
-  const catTotals = {};
-  categories.forEach(c => { catTotals[c.id] = 0; });
-  curLedger.expenses.forEach(e => { if (catTotals[e.cat] !== undefined) catTotals[e.cat] += e.amt; });
-
-  // ── ACTIONS ───────────────────────────────────────────
-  const logIncome = () => {
-    const a = parseFloat(incAmt);
-    if (!a || a <= 0 || !incSrc) { showToast('⚠ Fill amount and source'); return; }
-    const entry = { id: Date.now().toString(), amt:a, src:incSrc, note:incNote, date:new Date().toLocaleDateString('en-GB') };
-    
-    const curMonthLedger = ledger[key] || {income:[], expenses:[]};
-    const newLedger = { ...ledger, [key]: { ...curMonthLedger, income: [...curMonthLedger.income, entry] } };
-    
-    setLedger(newLedger); 
-    updateCloudData({ ledger: newLedger });
-    
-    setIncAmt(''); setIncNote('');
-    showToast('✓ Income logged! Allocations updated.');
-  };
-
-  const logExpense = () => {
-    const a = parseFloat(expAmt);
-    if (!expDesc.trim() || !a || a <= 0) { showToast('⚠ Fill description and amount'); return; }
-    
-    const finalCatId = expCat || autoCategory(expDesc, categories);
-    const cat = categories.find(c => c.id === finalCatId) || categories[0];
-
-    const entry = { id: Date.now().toString(), desc:expDesc.trim(), amt:a, cat:finalCatId, date:new Date().toLocaleDateString('en-GB') };
-    
-    const curMonthLedger = ledger[key] || {income:[], expenses:[]};
-    const newLedger = { ...ledger, [key]: { ...curMonthLedger, expenses: [...curMonthLedger.expenses, entry] } };
-
-    setLedger(newLedger);
-    updateCloudData({ ledger: newLedger });
-
-    setExpDesc(''); setExpAmt(''); setExpCat('');
-    showToast(`✓ Logged as "${cat.name}"`);
-  };
-
-  const deleteTx = (type, id) => {
-    const curMonthLedger = ledger[key] || {income:[], expenses:[]};
-    let newMonth;
-    if (type === 'inc') newMonth = { ...curMonthLedger, income: curMonthLedger.income.filter(e=>e.id!==id) };
-    else newMonth = { ...curMonthLedger, expenses: curMonthLedger.expenses.filter(e=>e.id!==id) };
-    
-    const newLedger = { ...ledger, [key]: newMonth };
-    setLedger(newLedger);
-    updateCloudData({ ledger: newLedger });
-  };
-
-  const addSource = () => {
-    if (!newSrc.trim()) return;
-    const ns = [...sources, newSrc.trim()];
-    setSources(ns); updateCloudData({ sources: ns });
-    setNewSrc(''); showToast(`✓ "${newSrc.trim()}" added`);
-  };
-
-  const addCategory = () => {
-    if (!newCatName.trim()) return;
-    const id = newCatName.toLowerCase().replace(/\s+/g,'_') + '_' + Date.now();
-    const nc = [...categories, { id, name:newCatName.trim(), emoji:newCatEmoji||'🏷' }];
-    setCategories(nc); updateCloudData({ categories: nc });
-    setNewCatEmoji(''); setNewCatName(''); showToast(`✓ "${newCatName}" added`);
-  };
-
-  const saveAllocations = () => {
-    const totalPct = draftAllocations.reduce((s, a) => s + Number(a.pct), 0);
-    if (totalPct !== 100) {
-       showToast(`⚠ Total equals ${totalPct}%. Must be exactly 100%.`);
-       return;
-    }
-    setAllocations(draftAllocations);
-    updateCloudData({ allocations: draftAllocations });
-    showToast('✓ Rules Saved!');
-  };
-
-  const updateDraftAlloc = (id, field, val) => {
-    setDraftAllocations(prev => prev.map(a => a.id === id ? { ...a, [field]: val } : a));
-  };
-
-  const addDraftAlloc = () => {
-    setDraftAllocations([...draftAllocations, { id: Date.now().toString(), name: 'New Split', pct: 0 }]);
-  };
-
   const removeDraftAlloc = (id) => {
     setDraftAllocations(draftAllocations.filter(a => a.id !== id));
   };
@@ -517,6 +498,33 @@ export default function App() {
   // ── RENDER SECTIONS ───────────────────────────────────
   const allTx = [...curLedger.income.map(e=>({...e,type:'inc'})), ...curLedger.expenses.map(e=>({...e,type:'exp'}))].sort((a,b)=>b.id-a.id);
   const nonZeroCats = categories.filter(c=>catTotals[c.id]>0).sort((a,b)=>catTotals[b.id]-catTotals[a.id]);
+
+  // ── RENDER COMPONENT GUARDS ────────────
+  if (!isFirebaseConfigured) return null;
+
+  if (authLoading) {
+    return <CustomLoader fullScreen={true} />;
+  }
+
+  if (!currentUser) {
+    return (
+      <div style={{...S.app, justifyContent:'center', padding: 20}}>
+        <div style={{textAlign:'center', marginBottom:40}}>
+          <div style={S.logo}>FRANC <span style={S.logoSub}>/ os auth</span></div>
+        </div>
+        <div style={S.card}>
+          <div style={S.secTitle}>{isSignUp ? 'CREATE ACCOUNT' : 'LOGIN TO FRANC'}</div>
+          <input style={S.input} type="email" placeholder="Email" value={loginEmail} onChange={e=>setLoginEmail(e.target.value)} />
+          <input style={S.input} type="password" placeholder="Password" value={loginPass} onChange={e=>setLoginPass(e.target.value)} />
+          {authError && <div style={{color:'#f87171', fontSize:12, marginBottom:15, fontFamily:'monospace'}}>{authError}</div>}
+          <button style={S.btnFull} onClick={handleAuthSubmit}>{isSignUp ? 'CREATE ACCOUNT' : 'LOGIN'}</button>
+          <button style={{...S.btnGhost, width:'100%', marginTop:10}} onClick={() => setIsSignUp(!isSignUp)}>
+             {isSignUp ? 'Already have an account? Login' : 'Need an account? Sign up'}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={S.app}>
@@ -614,7 +622,7 @@ export default function App() {
             
             <div style={S.row}>
                <div style={{flex: 1}}>
-                  <label style={S.formLabel}>CATEGORY OVERRIDE</label>
+                  <label style={S.formLabel}>CATEGORY</label>
                   <select style={{...S.input, marginBottom:12}} value={expCat} onChange={e=>setExpCat(e.target.value)}>
                     <option value="" disabled>Select Category...</option>
                     {categories.map(c => <option key={c.id} value={c.id}>{c.emoji} {c.name}</option>)}
@@ -628,33 +636,36 @@ export default function App() {
 
             <button style={S.btnFull} onClick={logExpense}>+ LOG EXPENSE</button>
           </div>
-
-          <div style={S.secTitle}>THIS MONTH'S TRANSACTIONS (JOURNAL)</div>
-          {allTx.length === 0
-            ? <div style={S.empty}>📋<br/>No transactions logged yet.</div>
-            : allTx.map(tx => {
-              const cat = categories.find(c=>c.id===tx.cat);
-              return (
-                <div key={tx.id} style={S.txItem}>
-                  <div style={S.txIcon}>{tx.type==='inc'?'💵':cat?.emoji||'📦'}</div>
-                  <div style={S.txInfo}>
-                    <div style={S.txDesc}>{tx.type==='inc'?tx.src:tx.desc}</div>
-                    <div style={S.txMeta}>{tx.type==='inc'?(tx.note||'Income'):cat?.name||'Misc'} · {tx.date}</div>
-                  </div>
-                  <div style={tx.type==='inc'?S.txAmtIn:S.txAmtOut}>{tx.type==='inc'?'+':'−'}{fmt(tx.amt)}</div>
-                  <button style={S.txDel} onClick={()=>deleteTx(tx.type==='inc'?'inc':'exp', tx.id)}>✕</button>
-                </div>
-              );
-            })
-          }
         </div>
       )}
 
       {tab==='sheet' && (
         <div style={S.section}>
           
+          <div style={{...S.secTitle, marginTop: 4, marginBottom: 12}}>THIS MONTH'S TRANSACTIONS (JOURNAL)</div>
+          <div style={{...S.card, padding: '0 16px', overflow: 'hidden'}}>
+            {allTx.length === 0
+              ? <div style={{...S.empty, padding:'24px 16px'}}>📋<br/>No transactions logged yet.</div>
+              : allTx.map((tx, index) => {
+                const cat = categories.find(c=>c.id===tx.cat);
+                const isLast = index === allTx.length - 1;
+                return (
+                  <div key={tx.id} style={{display:'flex', alignItems:'center', gap:10, padding:'12px 0', borderBottom: isLast ? 'none' : `1px solid ${isDark?'#ffffff0d':'#0000000a'}`}}>
+                    <div style={S.txIcon}>{tx.type==='inc'?'💵':cat?.emoji||'📦'}</div>
+                    <div style={S.txInfo}>
+                      <div style={S.txDesc}>{tx.type==='inc'?tx.src:tx.desc}</div>
+                      <div style={S.txMeta}>{tx.type==='inc'?(tx.note||'Income'):cat?.name||'Misc'} · {tx.date}</div>
+                    </div>
+                    <div style={tx.type==='inc'?S.txAmtIn:S.txAmtOut}>{tx.type==='inc'?'+':'−'}{fmt(tx.amt)}</div>
+                    <button style={S.txDel} onClick={()=>deleteTx(tx.type==='inc'?'inc':'exp', tx.id)}>✕</button>
+                  </div>
+                );
+              })
+            }
+          </div>
+
           {preferences.showAlloc && (
-            <div style={S.card}>
+            <div style={{...S.card, marginTop: 16}}>
               <div style={S.cardLabel}>TARGET ALLOCATIONS THIS MONTH</div>
               <div style={{fontFamily:'monospace',fontSize:10,color:S.app.color,marginBottom:12, lineHeight:1.5}}>
                 Based on your rules and Total Income of XAF {fmt(totalIn)}, your ideal distribution:
@@ -671,7 +682,7 @@ export default function App() {
             </div>
           )}
 
-          <div style={S.card}>
+          <div style={{...S.card, marginTop: 16}}>
             <div style={S.cardLabel}>BALANCE SHEET & VISUALS</div>
             
             {/* CSS Pie Chart generated dynamically based on actual out-going percentages */}
@@ -756,7 +767,7 @@ export default function App() {
                <label style={{position:'relative', width:60, height:60, cursor:'pointer', display:'block', flexShrink:0}}>
                  <div style={{width:'100%', height:'100%', borderRadius:'50%', background: isDark?'#ffffff1a':'#0000001a', display:'flex', alignItems:'center', justifyContent:'center', fontSize:24, overflow:'hidden'}}>
                    {currentUser.photoURL ? <img src={currentUser.photoURL} width="100%" height="100%" style={{objectFit:'cover'}} alt="profile"/> : '👤'}
-                   {uploadingImage && <div style={{position:'absolute', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14}}>⏳</div>}
+                   {uploadingImage && <div style={{position:'absolute', inset:0, background:'rgba(0,0,0,0.7)', display:'flex', alignItems:'center', justifyContent:'center'}}><CustomLoader mini={true} /></div>}
                  </div>
                  <div style={{position:'absolute', bottom:0, right:-4, width:20, height:20, borderRadius:'50%', background:S.app.color, color:S.app.background, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:'700', border:`2px solid ${isDark?'#10101a':'#ffffff'}`}}>+</div>
                  <input type="file" accept="image/*" style={{display:'none'}} onChange={handleImageUpload} />
