@@ -310,6 +310,14 @@ export default function App() {
       return;
     }
     const unsub = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        setCategories(DEFAULT_CATS);
+        setSources(DEFAULT_SOURCES);
+        setAllocations(DEFAULT_ALLOCATIONS);
+        setPreferences({ showAlloc: true });
+        setLedger({});
+        setDraftAllocations([]);
+      }
       if (!isFirestoreOfflineEnabled && db) {
         try {
           enableIndexedDbPersistence(db).catch(console.warn);
@@ -507,10 +515,11 @@ export default function App() {
     const tx = ledger[key]?.[catType]?.find(x => x.id === id);
     if (!tx) return;
     const nl = { ...ledger };
-    nl[key][catType] = nl[key][catType].filter(x => x.id !== id);
+    const newArr = nl[key][catType].filter(x => x.id !== id);
+    nl[key][catType] = newArr;
     setLedger(nl);
     if (currentUser) {
-      setDoc(doc(db, 'users', currentUser.uid), { [`ledger.${key}.${catType}`]: arrayRemove(tx) }, { merge: true }).catch(()=>showToast('⚠ Sync Error'));
+      setDoc(doc(db, 'users', currentUser.uid), { [`ledger.${key}.${catType}`]: newArr }, { merge: true }).catch(()=>showToast('⚠ Sync Error'));
     }
     showToast('✓ Transaction deleted');
   };
