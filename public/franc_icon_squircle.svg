@@ -1,0 +1,33 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Squircle background -->
+  <rect x="0" y="0" width="512" height="512" rx="112" fill="#c8f542"/>
+  <!-- Coin -->
+  <circle cx="256" cy="256" r="180" fill="#080810"/>
+
+  <!--
+    Pixel F — 10px blocks, 3px gap, step=13px
+    4 cols: width = 4*10 + 3*3 = 49 → startX = 256 - 49/2 = 231.5 ≈ 232
+    6 rows: height= 6*10 + 5*3 = 75 → startY = 256 - 75/2 = 218.5 ≈ 219
+    scaled to icon: multiply by ~2.5 so block=25px, gap=7px, step=32px
+    4 cols: width = 4*25 + 3*7 = 121 → startX = 256 - 121/2 = 195.5 ≈ 196
+    6 rows: height= 6*25 + 5*7 = 185 → startY = 256 - 185/2 = 163.5 ≈ 164
+  -->
+
+  <!-- Row 0: cols 0,1,2,3 -->
+  <rect x="196" y="164" width="25" height="25" rx="3" fill="#c8f542"/>
+  <rect x="228" y="164" width="25" height="25" rx="3" fill="#c8f542"/>
+  <rect x="260" y="164" width="25" height="25" rx="3" fill="#c8f542"/>
+  <rect x="292" y="164" width="25" height="25" rx="3" fill="#c8f542"/>
+  <!-- Row 1: col 0 -->
+  <rect x="196" y="196" width="25" height="25" rx="3" fill="#c8f542"/>
+  <!-- Row 2: cols 0,1,2 -->
+  <rect x="196" y="228" width="25" height="25" rx="3" fill="#c8f542"/>
+  <rect x="228" y="228" width="25" height="25" rx="3" fill="#c8f542"/>
+  <rect x="260" y="228" width="25" height="25" rx="3" fill="#c8f542"/>
+  <!-- Row 3: col 0 -->
+  <rect x="196" y="260" width="25" height="25" rx="3" fill="#c8f542"/>
+  <!-- Row 4: col 0 -->
+  <rect x="196" y="292" width="25" height="25" rx="3" fill="#c8f542"/>
+  <!-- Row 5: col 0 -->
+  <rect x="196" y="324" width="25" height="25" rx="3" fill="#c8f542"/>
+</svg>

@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
+      includeAssets: ['franc_icon_favicon.svg', 'franc_icon_squircle.svg'],
       manifest: {
         name: 'FRANC | Finance OS',
         short_name: 'FRANC',
@@ -18,14 +18,16 @@ export default defineConfig({
         orientation: 'portrait',
         icons: [
           {
-            src: 'https://via.placeholder.com/192/c8f542/080810?text=F',
+            src: '/franc_icon_squircle.svg',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/svg+xml',
+            purpose: 'any maskable'
           },
           {
-            src: 'https://via.placeholder.com/512/c8f542/080810?text=F',
+            src: '/franc_icon_squircle.svg',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/svg+xml',
+            purpose: 'any maskable'
           }
         ]
       }

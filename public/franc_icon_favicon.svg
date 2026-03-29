@@ -1,0 +1,30 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Squircle background -->
+  <rect x="0" y="0" width="64" height="64" rx="14" fill="#c8f542"/>
+  <!-- Coin -->
+  <circle cx="32" cy="32" r="22" fill="#080810"/>
+
+  <!--
+    Pixel F — block=3px, gap=1px, step=4px
+    4 cols: width = 4*3 + 3*1 = 15 → startX = 32 - 15/2 = 24.5 ≈ 25
+    6 rows: height= 6*3 + 5*1 = 23 → startY = 32 - 23/2 = 20.5 ≈ 21
+  -->
+
+  <!-- Row 0: cols 0,1,2,3 -->
+  <rect x="25" y="21" width="3" height="3" rx="0.5" fill="#c8f542"/>
+  <rect x="29" y="21" width="3" height="3" rx="0.5" fill="#c8f542"/>
+  <rect x="33" y="21" width="3" height="3" rx="0.5" fill="#c8f542"/>
+  <rect x="37" y="21" width="3" height="3" rx="0.5" fill="#c8f542"/>
+  <!-- Row 1: col 0 -->
+  <rect x="25" y="25" width="3" height="3" rx="0.5" fill="#c8f542"/>
+  <!-- Row 2: cols 0,1,2 -->
+  <rect x="25" y="29" width="3" height="3" rx="0.5" fill="#c8f542"/>
+  <rect x="29" y="29" width="3" height="3" rx="0.5" fill="#c8f542"/>
+  <rect x="33" y="29" width="3" height="3" rx="0.5" fill="#c8f542"/>
+  <!-- Row 3: col 0 -->
+  <rect x="25" y="33" width="3" height="3" rx="0.5" fill="#c8f542"/>
+  <!-- Row 4: col 0 -->
+  <rect x="25" y="37" width="3" height="3" rx="0.5" fill="#c8f542"/>
+  <!-- Row 5: col 0 -->
+  <rect x="25" y="41" width="3" height="3" rx="0.5" fill="#c8f542"/>
+</svg>
