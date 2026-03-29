@@ -495,6 +495,95 @@ export default function App() {
     document.body.removeChild(link);
   };
 
+  // ── CORE LOGIC & STATE DERIVATIVES ────────────────────
+  const key = getKey(curM, curY);
+  const curLedger = ledger[key] || { income:[], expenses:[] };
+
+  let totalIn = 0, totalOut = 0;
+  curLedger.income.forEach(e => totalIn += e.amt);
+  curLedger.expenses.forEach(e => totalOut += e.amt);
+  const net = totalIn - totalOut;
+
+  const catTotals = {};
+  categories.forEach(c => catTotals[c.id] = 0);
+  curLedger.expenses.forEach(e => {
+    if(catTotals[e.cat] !== undefined) catTotals[e.cat] += e.amt;
+    else catTotals[e.cat] = e.amt;
+  });
+
+  const changeMonth = (d) => {
+    let m = curM + d;
+    let y = curY;
+    if (m < 0) { m = 11; y--; }
+    else if (m > 11) { m = 0; y++; }
+    setCurM(m); setCurY(y);
+  };
+
+  const logIncome = () => {
+    const a = Number(incAmt);
+    if (!a || a <= 0) return showToast('⚠ Enter valid amount');
+    if (!incSrc) return showToast('⚠ Select source');
+    const nl = { ...ledger };
+    if (!nl[key]) nl[key] = { income:[], expenses:[] };
+    nl[key].income.push({ id: Date.now(), amt: a, src: incSrc, note: incNote, date: now.toISOString().split('T')[0] });
+    setLedger(nl);
+    updateCloudData({ ledger: nl });
+    setIncAmt(''); setIncNote('');
+    showToast('✓ Income logged');
+  };
+
+  const logExpense = () => {
+    const a = Number(expAmt);
+    if (!a || a <= 0) return showToast('⚠ Enter valid amount');
+    if (!expCat) return showToast('⚠ Select category');
+    const nl = { ...ledger };
+    if (!nl[key]) nl[key] = { income:[], expenses:[] };
+    nl[key].expenses.push({ id: Date.now(), amt: a, desc: expDesc, cat: expCat, date: now.toISOString().split('T')[0] });
+    setLedger(nl);
+    updateCloudData({ ledger: nl });
+    setExpAmt(''); setExpDesc(''); setExpCat('');
+    showToast('✓ Expense logged');
+  };
+
+  const deleteTx = (type, id) => {
+    if(!confirm('Delete transaction?')) return;
+    const nl = { ...ledger };
+    if (!nl[key]) return;
+    nl[key][type === 'inc' ? 'income' : 'expenses'] = nl[key][type === 'inc' ? 'income' : 'expenses'].filter(x => x.id !== id);
+    setLedger(nl);
+    updateCloudData({ ledger: nl });
+    showToast('✓ Transaction deleted');
+  };
+
+  const addCategory = () => {
+    const em = newCatEmoji.trim() || '📦';
+    const nm = newCatName.trim();
+    if (!nm) return showToast('⚠ Enter category name');
+    const id = nm.toLowerCase().replace(/\\s+/g, '');
+    if (categories.find(c=>c.id === id)) return showToast('⚠ Category exists');
+    const nc = [...categories, { id, name: nm, emoji: em }];
+    setCategories(nc);
+    updateCloudData({ categories: nc });
+    setNewCatEmoji(''); setNewCatName('');
+    showToast('✓ Category added');
+  };
+
+  const saveAllocations = () => {
+    const tot = draftAllocations.reduce((s,a)=>s+a.pct, 0);
+    if (tot !== 100) return showToast(`⚠ Total must be 100% (currently ${tot}%)`);
+    setAllocations(draftAllocations);
+    updateCloudData({ allocations: draftAllocations });
+    showToast('✓ Allocations saved');
+  };
+
+  const addDraftAlloc = () => {
+    setDraftAllocations([...draftAllocations, { id: 'al_'+Date.now(), name: '', pct: 0 }]);
+  };
+
+  const updateDraftAlloc = (id, field, val) => {
+    setDraftAllocations(draftAllocations.map(a => a.id===id ? { ...a, [field]: val } : a));
+  };
+
   // ── RENDER SECTIONS ───────────────────────────────────
   const allTx = [...curLedger.income.map(e=>({...e,type:'inc'})), ...curLedger.expenses.map(e=>({...e,type:'exp'}))].sort((a,b)=>b.id-a.id);
   const nonZeroCats = categories.filter(c=>catTotals[c.id]>0).sort((a,b)=>catTotals[b.id]-catTotals[a.id]);
