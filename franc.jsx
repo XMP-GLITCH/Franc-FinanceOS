@@ -171,7 +171,7 @@ const getStyles = (isDark) => {
     barFill: (pct) => ({ height:'100%', borderRadius:2, background:accent, width:`${pct}%`, transition:'width .6s ease' }),
     formBlock: { background:cardBg, border:`1px solid ${border}`, borderRadius:14, padding:16, marginBottom:12, transition:'all 0.3s ease' },
     formLabel: { fontFamily:'monospace', fontSize:10, color:textSub, letterSpacing:0.8, marginBottom:5, display:'block' },
-    input: { width:'100%', background:inputBg, border:`1px solid ${borderFaint}`, borderRadius:8, padding:'11px 13px', color:textMain, fontFamily:'monospace', fontSize:13, outline:'none', boxSizing:'border-box', marginBottom:10 },
+    input: { width:'100%', background:inputBg, border:`1px solid ${borderFaint}`, borderRadius:8, padding:'11px 13px', color:textMain, fontFamily:'monospace', fontSize:16, outline:'none', boxSizing:'border-box', marginBottom:10 },
     row: { display:'flex', gap:8 },
     btnAccent: { padding:'12px 16px', borderRadius:8, border:'none', fontFamily:'inherit', fontSize:12, fontWeight:700, cursor:'pointer', background:accent, color:isDark?'#080810':'#ffffff', whiteSpace:'nowrap', height:40, touchAction:'manipulation' },
     btnGhost: { padding:'12px 16px', borderRadius:8, border:`1px solid ${border}`, fontFamily:'inherit', fontSize:12, fontWeight:700, cursor:'pointer', background:inputBg, color:textMain, whiteSpace:'nowrap', touchAction:'manipulation' },
@@ -246,7 +246,7 @@ export default function App() {
   useEffect(() => {
     const style = document.createElement('style');
     style.innerHTML = `
-      body, html { margin: 0; padding: 0; background: ${S.app.background}; -webkit-tap-highlight-color: transparent; }
+      body, html { margin: 0; padding: 0; background: ${S.app.background}; -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; overflow-x: hidden; }
       ::-webkit-scrollbar { display: none; }
       * { scrollbar-width: none; }
 
