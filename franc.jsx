@@ -121,7 +121,7 @@ const CustomLoader = ({ fullScreen, mini }) => {
   }
   
   return (
-    <div className="loader-wrap" style={fullScreen ? { position: 'fixed', top: 0, left: 0, height: '100vh', width: '100vw', background: '#080810', boxSizing: 'border-box', zIndex: 9999 } : {}}>
+    <div className="loader-wrap" style={fullScreen ? { position: 'fixed', top: 0, left: 0, height: '100dvh', width: '100vw', background: '#080810', boxSizing: 'border-box', zIndex: 9999, padding: 0 } : {}}>
       <div className="icon-wrap">
         <SvgIcon />
       </div>
