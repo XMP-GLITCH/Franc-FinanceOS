@@ -171,7 +171,7 @@ export default function App() {
   const now = new Date();
   const [curM, setCurM] = useState(now.getMonth());
   const [curY, setCurY] = useState(now.getFullYear());
-  const [tab, setTab] = useState('overview');
+  const [tab, setTab] = useState('log');
   const [toast, setToast] = useState({ show:false, msg:'' });
 
   // Core Data States
@@ -207,7 +207,7 @@ export default function App() {
   useEffect(() => {
     const style = document.createElement('style');
     style.innerHTML = `
-      body, html { margin: 0; padding: 0; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
+      body, html { margin: 0; padding: 0; background: ${S.app.background}; -webkit-tap-highlight-color: transparent; }
       ::-webkit-scrollbar { display: none; }
       * { scrollbar-width: none; }
     `;
@@ -492,6 +492,27 @@ export default function App() {
     setDraftAllocations(draftAllocations.filter(a => a.id !== id));
   };
 
+  const downloadCSV = () => {
+    const h = ['Date', 'Type', 'Category/Source', 'Description', 'Amount (XAF)'];
+    const curLedger = ledger[key] || { income:[], expenses:[] };
+    const allTxForCsv = [...curLedger.income.map(e=>({...e,type:'inc'})), ...curLedger.expenses.map(e=>({...e,type:'exp'}))].sort((a,b)=>b.id-a.id);
+    
+    const data = allTxForCsv.map(tx => {
+       const type = tx.type === 'inc' ? 'Income' : 'Expense';
+       const cat = tx.type === 'inc' ? tx.src : (categories.find(c=>c.id===tx.cat)?.name || 'Misc');
+       const desc = tx.type === 'inc' ? (tx.note || 'Direct Income') : tx.desc;
+       return [`"${tx.date}"`, `"${type}"`, `"${cat}"`, `"${desc.replace(/"/g, '""')}"`, tx.amt];
+    });
+
+    const csvContent = "data:text/csv;charset=utf-8," + [h, ...data].map(e => e.join(",")).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `FRANC_Statement_${MONTHS_SHORT[curM]}_${curY}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   // ── RENDER SECTIONS ───────────────────────────────────
   const allTx = [...curLedger.income.map(e=>({...e,type:'inc'})), ...curLedger.expenses.map(e=>({...e,type:'exp'}))].sort((a,b)=>b.id-a.id);
@@ -562,6 +583,17 @@ export default function App() {
 
       {tab==='log' && (
         <div style={S.section}>
+          <div style={{...S.statGrid, marginBottom: 24}}>
+            <div style={{...S.stat('#34d399'), padding: '12px 14px'}}>
+              <div style={S.statLabel}>THIS MONTH IN</div>
+              <div style={{...S.statVal('#34d399'), fontSize: 16}}>XAF {fmt(totalIn)}</div>
+            </div>
+            <div style={{...S.stat('#f87171'), padding: '12px 14px'}}>
+              <div style={S.statLabel}>THIS MONTH OUT</div>
+              <div style={{...S.statVal('#f87171'), fontSize: 16}}>XAF {fmt(totalOut)}</div>
+            </div>
+          </div>
+
           <div style={S.secTitle}>LOG INCOME</div>
           <div style={S.formBlock}>
             <label style={S.formLabel}>AMOUNT (XAF)</label>
@@ -794,7 +826,12 @@ export default function App() {
             <button style={{...S.btnAccent, height: 'auto'}} onClick={addCategory}>ADD</button>
           </div>
 
-          <button style={{...S.btnGhost, borderColor:'#f8717140', color:'#f87171', width:'100%', marginTop:10, padding:14}} onClick={() => signOut(auth)}>
+          <div style={S.secTitle}>DATA EXPORT</div>
+          <button style={{...S.btnGhost, width:'100%', marginBottom:30, textAlign:'center'}} onClick={downloadCSV}>
+            ⬇️ DOWNLOAD CSV STATEMENT
+          </button>
+
+          <button style={{...S.btnGhost, borderColor:'#f8717140', color:'#f87171', width:'100%', padding:14, textAlign:'center'}} onClick={() => signOut(auth)}>
             LOG OUT ({currentUser.email})
           </button>
         </div>
