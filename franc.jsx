@@ -295,26 +295,26 @@ export default function App() {
         display: flex; flex-direction: column; align-items: center; justify-content: center;
         padding: 60px 20px; min-height: 320px; border-radius: 16px;
       }
-      .icon-wrap { position: relative; width: 120px; height: 120px; margin-bottom: 32px; animation: pulse-coin 2.4s ease-in-out infinite; }
+      .icon-wrap { position: relative; width: 120px; height: 120px; margin-bottom: 32px; animation: pulse-coin 4.8s ease-in-out infinite; }
       .icon-wrap svg { width: 100%; height: 100%; overflow: hidden; border-radius: 26px; }
       .scan {
         position: absolute; top: 0; left: 0; right: 0; height: 18px;
         background: linear-gradient(to bottom, transparent, #c8f54222, transparent);
-        border-radius: 26px; animation: scan-line 1.8s ease-in-out infinite; pointer-events: none;
+        border-radius: 26px; animation: scan-line 3.6s ease-in-out infinite; pointer-events: none;
       }
-      .p0 { animation: blink-pixel 1.1s step-start infinite 0.0s; }
-      .p1 { animation: blink-pixel 1.1s step-start infinite 0.15s; }
-      .p2 { animation: blink-pixel 1.1s step-start infinite 0.3s; }
-      .p3 { animation: blink-pixel 1.1s step-start infinite 0.45s; }
-      .p4 { animation: blink-pixel 1.1s step-start infinite 0.6s; }
-      .p5 { animation: blink-pixel 1.1s step-start infinite 0.75s; }
-      .p6 { animation: blink-pixel 1.1s step-start infinite 0.9s; }
-      .p7 { animation: blink-pixel 1.1s step-start infinite 1.05s; }
-      .p8 { animation: blink-pixel 1.1s step-start infinite 1.2s; }
-      .p9 { animation: blink-pixel 1.1s step-start infinite 1.35s; }
+      .p0 { animation: blink-pixel 3.3s step-start infinite 0.0s; }
+      .p1 { animation: blink-pixel 3.3s step-start infinite 0.45s; }
+      .p2 { animation: blink-pixel 3.3s step-start infinite 0.9s; }
+      .p3 { animation: blink-pixel 3.3s step-start infinite 1.35s; }
+      .p4 { animation: blink-pixel 3.3s step-start infinite 1.8s; }
+      .p5 { animation: blink-pixel 3.3s step-start infinite 2.25s; }
+      .p6 { animation: blink-pixel 3.3s step-start infinite 2.7s; }
+      .p7 { animation: blink-pixel 3.3s step-start infinite 3.15s; }
+      .p8 { animation: blink-pixel 3.3s step-start infinite 3.6s; }
+      .p9 { animation: blink-pixel 3.3s step-start infinite 4.05s; }
       .wordmark {
         font-family: ui-monospace, monospace; font-size: 22px; font-weight: 700; color: #c8f542;
-        letter-spacing: 10px; animation: fade-in-word 0.9s ease-out both; margin-bottom: 10px;
+        letter-spacing: 10px; animation: fade-in-word 2.5s ease-out both; margin-bottom: 10px;
       }
       .sub { font-family: ui-monospace, monospace; font-size: 11px; color: #5a5a7a; letter-spacing: 3px; margin-bottom: 28px; }
       .loading-bar-wrap { width: 120px; height: 2px; background: #1a1a2e; border-radius: 2px; overflow: hidden; margin-bottom: 10px; }
@@ -322,9 +322,9 @@ export default function App() {
         0%   { width: 0%; } 20%  { width: 30%; } 50%  { width: 58%; }
         80%  { width: 82%; } 95%  { width: 95%; } 100% { width: 100%; }
       }
-      .loading-bar { height: 100%; background: #c8f542; border-radius: 2px; animation: bar-fill 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+      .loading-bar { height: 100%; background: #c8f542; border-radius: 2px; animation: bar-fill 5.6s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
       .loading-text { font-family: ui-monospace, monospace; font-size: 11px; color: #444466; letter-spacing: 1.5px; }
-      .loading-text::after { content: ''; animation: dots 1.2s steps(1) infinite; }
+      .loading-text::after { content: ''; animation: dots 2.4s steps(1) infinite; }
     `;
     document.head.appendChild(style);
     return () => document.head.removeChild(style);
