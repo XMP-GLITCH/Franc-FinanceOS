@@ -213,6 +213,11 @@ export default function App() {
   const [tab, setTab] = useState('log');
   const [toast, setToast] = useState({ show:false, msg:'' });
 
+  // PWA Prompt States
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showPwaPrompt, setShowPwaPrompt] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+
   // Core Data States
   const [categories, setCategories] = useState(DEFAULT_CATS);
   const [sources, setSources] = useState(DEFAULT_SOURCES);
@@ -241,6 +246,50 @@ export default function App() {
   const [uploadingImage, setUploadingImage] = useState(false);
 
   const S = getStyles(isDark);
+
+  // ── PWA INSTALLATION LOGIC ─────────────────────────────
+  useEffect(() => {
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone || document.referrer.includes('android-app://');
+    if (isStandalone) return;
+    
+    let sysIOS = false;
+    const ua = navigator.userAgent;
+    if (/iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+       sysIOS = true;
+       setIsIOS(true);
+    }
+    
+    const handler = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowPwaPrompt(true);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    
+    if (sysIOS && !localStorage.getItem('franc_hide_pwa')) {
+       setShowPwaPrompt(true);
+    }
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (isIOS) {
+       alert("To install on iOS:\n1. Tap the Share icon at the bottom of Safari.\n2. Scroll down and tap 'Add to Home Screen'.");
+       setShowPwaPrompt(false);
+       localStorage.setItem('franc_hide_pwa', '1');
+       return;
+    }
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') setShowPwaPrompt(false);
+    setDeferredPrompt(null);
+  };
+  
+  const dismissPrompt = () => {
+    setShowPwaPrompt(false);
+    if (isIOS) localStorage.setItem('franc_hide_pwa', '1');
+  };
 
   // ── INJECT GLOBAL 'NATIVE APP' STYLES & LOAD ANIMATION ──────
   useEffect(() => {
@@ -903,6 +952,20 @@ export default function App() {
           <button style={{...S.btnGhost, borderColor:'#f8717140', color:'#f87171', width:'100%', padding:14, textAlign:'center'}} onClick={() => signOut(auth)}>
             LOG OUT ({currentUser.email})
           </button>
+        </div>
+      )}
+
+      {/* PWA PROMPT BANNER */}
+      {showPwaPrompt && (
+        <div style={{ position:'fixed', bottom:16, left:16, right:16, background: isDark ? '#1a1a2e' : '#ffffff', border:`1px solid ${isDark ? '#33334d':'#eaeaea'}`, padding:'16px', borderRadius:16, zIndex:999, display:'flex', alignItems:'center', gap:10, boxShadow:'0 15px 35px rgba(0,0,0,0.3)', transition:'all 0.3s' }}>
+          <div style={{flex:1}}>
+            <div style={{fontSize:13, fontWeight:700, marginBottom:3, color: isDark ? '#fff' : '#000'}}>Install FRANC App</div>
+            <div style={{fontSize:10.5, color: isDark ? '#9999bb' : '#666', fontFamily:'monospace'}}>Get the full offline experience.</div>
+          </div>
+          <div style={{display:'flex', gap:8, alignItems:'center'}}>
+            <button style={{background:'none', border:'none', color:isDark ? '#7777aa' : '#666', fontSize:11, fontWeight:700, padding:'8px', cursor:'pointer'}} onClick={dismissPrompt}>LATER</button>
+            <button style={{background:'#c8f542', color:'#080810', border:'none', borderRadius:8, fontSize:11, fontWeight:800, padding:'8px 14px', cursor:'pointer'}} onClick={handleInstallClick}>INSTALL</button>
+          </div>
         </div>
       )}
 
