@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { initializeApp } from 'firebase/app';
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updateProfile, sendEmailVerification } from 'firebase/auth';
-import { getFirestore, enableIndexedDbPersistence, doc, onSnapshot, setDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { getFirestore, enableIndexedDbPersistence, doc, onSnapshot, setDoc, collection, deleteDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // ── FIREBASE CONFIG ─────────────────────────────────────
@@ -223,7 +223,8 @@ export default function App() {
   const [sources, setSources] = useState(DEFAULT_SOURCES);
   const [allocations, setAllocations] = useState(DEFAULT_ALLOCATIONS);
   const [preferences, setPreferences] = useState({ showAlloc: true });
-  const [ledger, setLedger] = useState({});
+  const [transactions, setTransactions] = useState([]);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   // Form states
   const [incAmt, setIncAmt] = useState('');
@@ -364,8 +365,9 @@ export default function App() {
         setSources(DEFAULT_SOURCES);
         setAllocations(DEFAULT_ALLOCATIONS);
         setPreferences({ showAlloc: true });
-        setLedger({});
+        setTransactions([]);
         setDraftAllocations([]);
+        setDataLoaded(false);
       }
       if (!isFirestoreOfflineEnabled && db) {
         try {
@@ -383,7 +385,7 @@ export default function App() {
   useEffect(() => {
     if (!currentUser || !db) return;
     const userRef = doc(db, 'users', currentUser.uid);
-    const unsub = onSnapshot(userRef, (snapshot) => {
+    const unsubUser = onSnapshot(userRef, (snapshot) => {
       if (snapshot.exists()) {
         const d = snapshot.data();
         if (d.categories) setCategories(d.categories);
@@ -393,13 +395,25 @@ export default function App() {
            setDraftAllocations(d.allocations);
         }
         if (d.preferences) setPreferences(d.preferences);
-        if (d.ledger) setLedger(d.ledger);
         if (!incSrc && d.sources && d.sources.length > 0) {
            setIncSrc(d.sources[0]);
         }
       }
     });
-    return () => unsub();
+
+    const txRef = collection(db, 'users', currentUser.uid, 'transactions');
+    const unsubTx = onSnapshot(txRef, (snapshot) => {
+      const txs = [];
+      snapshot.forEach(d => txs.push(d.data()));
+      txs.sort((a, b) => b.id - a.id);
+      setTransactions(txs);
+      setDataLoaded(true);
+    }, (err) => {
+      console.warn("Tx Sync Error:", err);
+      setDataLoaded(true);
+    });
+
+    return () => { unsubUser(); unsubTx(); };
   }, [currentUser]);
 
   useEffect(() => {
@@ -482,8 +496,7 @@ export default function App() {
 
   const downloadCSV = () => {
     const h = ['Date', 'Type', 'Category/Source', 'Description', 'Amount (XAF)'];
-    const curLedger = ledger[key] || { income:[], expenses:[] };
-    const allTxForCsv = [...curLedger.income.map(e=>({...e,type:'inc'})), ...curLedger.expenses.map(e=>({...e,type:'exp'}))].sort((a,b)=>b.id-a.id);
+    const allTxForCsv = transactions.filter(t => t.month === key);
     
     const data = allTxForCsv.map(tx => {
        const type = tx.type === 'inc' ? 'Income' : 'Expense';
@@ -504,11 +517,20 @@ export default function App() {
 
   // ── CORE LOGIC & STATE DERIVATIVES ────────────────────
   const key = getKey(curM, curY);
-  const curLedger = ledger[key] || { income:[], expenses:[] };
+  const curLedger = { income:[], expenses:[] };
 
   let totalIn = 0, totalOut = 0;
-  curLedger.income.forEach(e => totalIn += e.amt);
-  curLedger.expenses.forEach(e => totalOut += e.amt);
+  transactions.forEach(t => {
+    if (t.month === key) {
+      if (t.type === 'inc') {
+        curLedger.income.push(t);
+        totalIn += t.amt;
+      } else if (t.type === 'exp') {
+        curLedger.expenses.push(t);
+        totalOut += t.amt;
+      }
+    }
+  });
   const net = totalIn - totalOut;
 
   const catTotals = {};
@@ -530,13 +552,12 @@ export default function App() {
     const a = Number(incAmt);
     if (!a || a <= 0) return showToast('⚠ Enter valid amount');
     if (!incSrc) return showToast('⚠ Select source');
-    const tx = { id: Date.now(), amt: a, src: incSrc, note: incNote, date: now.toISOString().split('T')[0] };
-    const nl = { ...ledger };
-    if (!nl[key]) nl[key] = { income:[], expenses:[] };
-    nl[key].income.push(tx);
-    setLedger(nl);
+    const txId = 'tx_' + Date.now();
+    const tx = { id: Date.now(), txId, type: 'inc', amt: a, src: incSrc, note: incNote, date: now.toISOString().split('T')[0], month: key };
+    
+    setTransactions([tx, ...transactions]);
     if (currentUser) {
-      setDoc(doc(db, 'users', currentUser.uid), { [`ledger.${key}.income`]: arrayUnion(tx) }, { merge: true }).catch(()=>showToast('⚠ Sync Error'));
+      setDoc(doc(db, 'users', currentUser.uid, 'transactions', txId), tx).catch(()=>showToast('⚠ Sync Error'));
     }
     setIncAmt(''); setIncNote('');
     showToast('✓ Income logged');
@@ -546,13 +567,12 @@ export default function App() {
     const a = Number(expAmt);
     if (!a || a <= 0) return showToast('⚠ Enter valid amount');
     if (!expCat) return showToast('⚠ Select category');
-    const tx = { id: Date.now(), amt: a, desc: expDesc, cat: expCat, date: now.toISOString().split('T')[0] };
-    const nl = { ...ledger };
-    if (!nl[key]) nl[key] = { income:[], expenses:[] };
-    nl[key].expenses.push(tx);
-    setLedger(nl);
+    const txId = 'tx_' + Date.now();
+    const tx = { id: Date.now(), txId, type: 'exp', amt: a, desc: expDesc, cat: expCat, date: now.toISOString().split('T')[0], month: key };
+    
+    setTransactions([tx, ...transactions]);
     if (currentUser) {
-      setDoc(doc(db, 'users', currentUser.uid), { [`ledger.${key}.expenses`]: arrayUnion(tx) }, { merge: true }).catch(()=>showToast('⚠ Sync Error'));
+      setDoc(doc(db, 'users', currentUser.uid, 'transactions', txId), tx).catch(()=>showToast('⚠ Sync Error'));
     }
     setExpAmt(''); setExpDesc(''); setExpCat('');
     showToast('✓ Expense logged');
@@ -560,15 +580,14 @@ export default function App() {
 
   const deleteTx = (type, id) => {
     if(!confirm('Delete transaction?')) return;
-    const catType = type === 'inc' ? 'income' : 'expenses';
-    const tx = ledger[key]?.[catType]?.find(x => x.id === id);
+    const tx = transactions.find(x => x.id === id);
     if (!tx) return;
-    const nl = { ...ledger };
-    const newArr = nl[key][catType].filter(x => x.id !== id);
-    nl[key][catType] = newArr;
-    setLedger(nl);
-    if (currentUser) {
-      setDoc(doc(db, 'users', currentUser.uid), { [`ledger.${key}.${catType}`]: newArr }, { merge: true }).catch(()=>showToast('⚠ Sync Error'));
+    
+    setTransactions(transactions.filter(x => x.id !== id));
+    if (currentUser && tx.txId) {
+      deleteDoc(doc(db, 'users', currentUser.uid, 'transactions', tx.txId)).catch(()=>showToast('⚠ Sync Error'));
+    } else if (currentUser) {
+      showToast('⚠ Cannot delete legacy transaction via new architecture.');
     }
     showToast('✓ Transaction deleted');
   };
@@ -603,13 +622,13 @@ export default function App() {
   };
 
   // ── RENDER SECTIONS ───────────────────────────────────
-  const allTx = [...curLedger.income.map(e=>({...e,type:'inc'})), ...curLedger.expenses.map(e=>({...e,type:'exp'}))].sort((a,b)=>b.id-a.id);
+  const allTx = transactions.filter(t => t.month === key);
   const nonZeroCats = categories.filter(c=>catTotals[c.id]>0).sort((a,b)=>catTotals[b.id]-catTotals[a.id]);
 
   // ── RENDER COMPONENT GUARDS ────────────
   if (!isFirebaseConfigured) return null;
 
-  if (authLoading) {
+  if (authLoading || (currentUser && !dataLoaded)) {
     return <CustomLoader fullScreen={true} />;
   }
 
