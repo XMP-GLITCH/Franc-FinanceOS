@@ -636,7 +636,8 @@ export default function App() {
     return (
       <div style={{...S.app, justifyContent:'center', padding: 20}}>
         <div style={{textAlign:'center', marginBottom:40}}>
-          <div style={S.logo}>FRANC <span style={S.logoSub}>/ os auth</span></div>
+          <div style={S.logo}>FRANC <span style={S.logoSub}>/ v2.0 auth</span></div>
+          <p style={{fontSize:13, color:isDark?'#888':'#666', marginTop:10, fontFamily:'monospace'}}>Welcome to the new resilient engine.</p>
         </div>
         <div style={S.card}>
           <div style={S.secTitle}>{isSignUp ? 'CREATE ACCOUNT' : 'LOGIN TO FRANC'}</div>
